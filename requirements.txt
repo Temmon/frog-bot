@@ -12,4 +12,5 @@ multidict==6.4.3
 numpy==2.2.5
 propcache==0.3.1
 py-cord==2.6.1
+python-dotenv==1.1.0
 yarl==1.20.0
