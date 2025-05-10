@@ -1,0 +1,41 @@
+# Frog-bot
+
+Support for a shared bot for the polyamory Discord server that even people who can't really program can contribute to. 
+
+It uses Pycord.
+
+https://guide.pycord.dev/interactions/application-commands/slash-commands
+
+## To contribute to it
+
+This is designed so that anyone can create a little function that will be turned into a slash command really easily.
+
+Create a file with at least one function in the frogs folder. 
+
+The first argument should be the context, for the sake of py-cord. It can have more arguments that are suppored by py-cord. Use type annotations, such as :int or :str. See frogs/add.py for an example. 
+
+The function must return a string.
+
+Create a variable called frogs inside the file. It should be a list of dictionaries. Each dictionary needs 3 fields: 
+
+command: the function you want it to call
+
+name: the name discord will use to call it
+
+description: a description for discord.
+
+## To setup
+
+There's a requirements.txt for your pip. Hopefully I remembered to freeze everything I needed.
+
+Put your bot token in a .env file under BOT_TOKEN or add BOT_TOKEN to your environment.
+
+## To run
+
+python main.py
+
+It's actually pretty simple. 
+
+## Possible problems
+
+You have to put your list of frogs after all the functions so that you can reference them in the list.
