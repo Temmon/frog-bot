@@ -6,6 +6,8 @@ import importlib.util
 import discord
 from discord.commands import SlashCommand
 
+from makefun import create_function
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,6 +18,10 @@ bot = discord.Bot()
 @bot.event
 async def on_ready():
     print(f"We have logged in as {bot.user}")
+
+@bot.slash_command
+async def hi(context):
+    await ctx.respond("This is how to do a normal slash command if anyone does fancy stuff.")
 
 #dynamically import all the Python files we found.
 def load_module(source, module_name):
@@ -28,38 +34,36 @@ def load_module(source, module_name):
     return module
 
 #Find all of the python files in the frogs folder
-def find_extensions():
+def find_files():
     return [f for f in os.listdir("frogs") if os.path.isfile(os.path.join("frogs", f)) and f.endswith(".py") and f != "main.py"]
+
 
 #Iterate over our imported python files. Within each python file, look for methods that begin with "frog_"
 #and register them as a slash command.
-def register_frogs(exts):
+def register_frogs(files):
+    for file in files:
+        for frog in file.frogs:
 
-    frogs = []
-    for ext in exts:
-        frogs = [f for f in dir(ext) if f.startswith("frog_")]
-        for name in frogs:
-            frog = getattr(ext, name)
+            async def callback_impl(ctx, *args, **kwargs):
+                await ctx.respond(frog["command"](ctx, *args, **kwargs))
 
-            spec = inspect.getfullargspec(frog)
-            #This is to figure out the name of the function using the name kwarg.
-            #It feels like a dirty hack, probably because it is. But as long as there's only one default argument
-            #it works without adding any extra stuff into our user code.
-            name = spec.defaults[0]
+            signature = inspect.signature(frog["command"])
 
-            print(f"Registering method {frog} from module {ext} with name {name}")
+            print(f"Signature: {signature}")
+            print(f"Registering command {frog["command"]} from module {file} with name {frog["name"]}")
 
-            async def callback_stub(ctx):
-                await ctx.respond(frog(ctx))
+            #gets the signature that the user created and imposes that signature on top of our
+            #impl func above to make a function with the right signature for discord to help with completions
+            cmd = create_function(signature, callback_impl)
 
-            bot.slash_command(name=name)(callback_stub)
+            bot.slash_command(name=frog["name"], description=frog["description"])(cmd)
 
 
 def main():
-    ext_list = find_extensions()
-    print(f"Found extensions {ext_list}")
-    exts = [load_module(os.path.join("frogs", ext), os.path.splitext(ext)[0]) for ext in ext_list]
-    frogs = register_frogs(exts)
+    file_list = find_files()
+    print(f"Found files {file_list}")
+    loaded = [load_module(os.path.join("frogs", file), os.path.splitext(file)[0]) for file in file_list]
+    frogs = register_frogs(loaded)
 
     bot.run(os.getenv('BOT_TOKEN'))
 
